@@ -14,7 +14,7 @@ const { regRouter } = require('./controllers/register');
 const {userRouter}=require("./controllers/users");
 const {authenticate}=require('./controllers/authenticate');
 const { refreshRouter } = require('./controllers/refreshToken');
-const socketFunc = require('./controllers/socket')
+
 const { googleOauthRouter } = require('./controllers/oauth.google');
 const {quizRouter}=require("./controllers/quizz.Routes")
 const { eventRouter } = require('./controllers/adminpol.route');
@@ -30,7 +30,7 @@ app.use(helmet());
 app.use(cookieParser());
 app.use(express.json());
 const httpServer = require("http").createServer(app);
-const io = require("socket.io")(httpServer,{cors:{origin:"*"}})
+
 //middleWares
 
 
@@ -56,54 +56,8 @@ app.get("/",async(req,res)=>{
     }catch(err){console.log(err)}
 })
 
-//socket.io 
-socketFunc(io)
 
 
-
-
-
-
-let users = [];
-
-function userJoin(id, room) {
-  const user = { id, room };
-  users.push(user);
-//   console.log(users);
-  return user;
-}
-
-function getCurrentUser(id) {
-  return users.find((user) => user.id === id);
-}
-
-function userLeave(id) {
-  const index = users.findIndex((user) => user.id === id);
-  if (index !== -1) {
-    return users.splice(index, 1)[0];
-  }
-}
-
-io.on("connection", (socket) => {
-  console.log("Client is Connected");
-  socket.on("joinRoom", ({ room }) => {
-    const user = userJoin(socket.id, room);
-    // console.log(user);
-
-    socket.join(user.room);
-  });
-
-  socket.on("response", (msg) => {
-    const user = getCurrentUser(socket.id);
-
-    io.to(user.room).emit("message", msg);
-  });
-
-  socket.on("disconnect", () => {
-    const user = userLeave(socket.id);
-    console.log("Client Disconnected.");
-  });
-});
 
 
 
